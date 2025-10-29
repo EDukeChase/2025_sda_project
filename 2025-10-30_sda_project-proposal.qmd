@@ -13,15 +13,75 @@ source(here::here("R", "setup.R"))
 # Set key directory paths
 data_dir <- here::here("data")
 output_dir <- here::here("output")
+
+pt_df <- read.csv(here("data", "patient_info.csv"))
+cell_df <- read.csv(here("data", "scaled_mibi_data_w_cell_gating.csv"))
 ```
 
 Provide the the following information for your project.
 
 1. What research question(s) do you hope to answer?
+
+::: {.answer-box}
+  Does the relative distribution of tumor, stromal, and immune cells in a patient 
+:::
+
+
 2. From where did you obtain the data you will use to answer your research question? Please provide a link I can follow, if possible.
+
+::: {.answer-box}
+  Data were obtained from the article *[Processed Multiplexed Ion Beam Imaging (MIBI) of tumor microenvironments of 54 melanoma samples following immunotherapy](https://data.mendeley.com/datasets/79y7bht7tf/2)* on Mendeley Data
+:::
+
+
 3. How many observations does your data set have?
+
+```{r}
+#| label: observations
+
+num_pts <- length(unique(cell_df$fov))
+num_cell <- list()
+
+for(i in 1:num_pts) {
+  
+}
+```
+
+
+
+::: {.answer-box}
+  The data set contains data on 54 melanoma samples from patients who had received immunotherap for their cancer.
+:::
+
 4. Are you merging multiple data sets?
+
+::: {.answer-box}
+  Yes, there is one data set which contains basic anonymized information on patients, such as age tertile at diagnosis, cancer stage at diagnosis, 
+:::
+
+
 5. Provide a table listing each variable you are considering for analysis, briefly describe each variable (e.g., the number of disease cases in each region), and the variable type (e.g., numeric, factor, date, etc.).
+
+::: {.answer-box}
+  Answer here
+:::
+
+
 6. What will your response variable be for answering the research question(s)?
+
+::: {.answer-box}
+  Answer here
+:::
+
 7. Provide relevant exploratory plots of your data.
+
+::: {.answer-box}
+  Answer here
+:::
+
 8. What methods do you plan to use to answer your question of interest?
+
+::: {.answer-box}
+  Answer here
+:::
+

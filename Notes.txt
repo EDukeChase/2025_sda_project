@@ -1,0 +1,5 @@
+Dataset location and description: https://data.mendeley.com/datasets/79y7bht7tf/2
+
+Citation: Vesely, Matthew; Johnson, David (2025), “Processed Multiplexed Ion Beam Imaging (MIBI) of tumor microenvironments of 54 melanoma samples following immunotherapy”, Mendeley Data, V2, doi: 10.17632/79y7bht7tf.2
+
+Accessed: 2025-10-29
