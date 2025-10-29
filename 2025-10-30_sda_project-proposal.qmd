@@ -1,0 +1,27 @@
+---
+title: "Project Proposal"
+author: "E. Duke Chase"
+date: today
+---
+```{r}
+#| label: setup
+#| include: false
+
+library(here)
+source(here::here("R", "setup.R"))
+
+# Set key directory paths
+data_dir <- here::here("data")
+output_dir <- here::here("output")
+```
+
+Provide the the following information for your project.
+
+1. What research question(s) do you hope to answer?
+2. From where did you obtain the data you will use to answer your research question? Please provide a link I can follow, if possible.
+3. How many observations does your data set have?
+4. Are you merging multiple data sets?
+5. Provide a table listing each variable you are considering for analysis, briefly describe each variable (e.g., the number of disease cases in each region), and the variable type (e.g., numeric, factor, date, etc.).
+6. What will your response variable be for answering the research question(s)?
+7. Provide relevant exploratory plots of your data.
+8. What methods do you plan to use to answer your question of interest?
