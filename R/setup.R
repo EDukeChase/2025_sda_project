@@ -6,7 +6,8 @@ library(knitr)              # Used for running R code in Quarto
 library(RColorBrewer)       # Color palettes to enable color-blind friendliness
 library(tidyverse)          # Essential R packages
 
-# --- Homework specific packages ---
+# --- Additional packages ---
+library(kableExtra)         # Table generation and formatting
 
 # --- Set seed for reproducibility ---
 set.seed(6384)

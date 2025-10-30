@@ -23,7 +23,7 @@ Provide the the following information for your project.
 1. What research question(s) do you hope to answer?
 
 ::: {.answer-box}
-  Does the relative distribution of tumor, stromal, and immune cells in a patient 
+  Do the relative distributions of tumor, immune, and stromal (structural) cells in a tumor relate to disease outcome after immunotherapy?
 :::
 
 
@@ -39,38 +39,66 @@ Provide the the following information for your project.
 ```{r}
 #| label: observations
 
-num_pts <- length(unique(cell_df$fov))
-num_cell <- list()
-
-for(i in 1:num_pts) {
-  
-}
+num_pt <- length(unique(cell_df$fov))
+min_cells <- range(count(cell_df, fov)[2])[1]
+max_cells <- range(count(cell_df, fov)[2])[2]
 ```
 
 
 
 ::: {.answer-box}
-  The data set contains data on 54 melanoma samples from patients who had received immunotherap for their cancer.
+  - The first dataset contains a small amount of demographic and outcome data on `r num_pt` patients with melanoma who had received immunotherapy for their cancer.
+  - The second dataset contains spatial data on cells in a biopsy sampled from each patients melanoma. The number of cells in each sample varies from `r min_cells` to `r max_cells`, for a total of `r nrow(cell_df)` observations.
 :::
 
 4. Are you merging multiple data sets?
 
 ::: {.answer-box}
-  Yes, there is one data set which contains basic anonymized information on patients, such as age tertile at diagnosis, cancer stage at diagnosis, 
+  The information from the two datasets will be merged as part of the analysis, but I won't be combining the two datasets into a single dataset because it would add a lot of extra entries without improving the ability to do my analysis.
 :::
 
 
 5. Provide a table listing each variable you are considering for analysis, briefly describe each variable (e.g., the number of disease cases in each region), and the variable type (e.g., numeric, factor, date, etc.).
 
-::: {.answer-box}
-  Answer here
-:::
+```{r}
+#| label: analysis-vars
+
+var_names <- c("Patient ID", "Age Tertile at Diagnosis", "Stage at Diagnosis", "Response", "CR", "PR", "SD", "PD" ,  "Response (binary)", "Cell Type", "Immune", "Stromal", "Tumor", "Centroid Location", "Cell Area", "Tumor-Immune", "Tumor-Stromal", "Immune-Stromal")
+var_desc <- c(
+  "Unique identifier for each patient.",
+  "Which tertile of patient ages the patient falls in.",
+  "Roman numeral cancer stage at diagnosis",
+  "How the patients melanoma responded ot the immunotherapy treatment",
+  "Complete response",
+  "Partial response",
+  "Stable disease",
+  "Progressive disease",
+  "A binary version which indicates whether the disease progressed or not",
+  "Type of cell in the biopsy sample",
+  "Immune cell", 
+  "Stromal cell", 
+  "Tumor cell",
+  "x- and y- locations of each cell in the biopsy sample",
+  "Estimated cell area",
+  "Distribution of immune cells relative to tumor cells",
+  "Distribution of tumor cells amongst stromal cells",
+  "Dispersion of immune cells amongst the stromal cells"
+)
+var_type <- c("Character", "Categorical", "Categorical", "Categorical", "", "", "", "", "Boolean", "Categorical", "", "", "", "Spatial", "Numeric", "Numeric", "Numeric", "Numeric")
+
+var_table <- tibble("Variable Name" = var_names, "Description" = var_desc, "Variable Type" = var_type)
+
+var_table |> 
+  kable("html", booktabs = TRUE) |> 
+  add_indent(positions = c(5:8, 11:13))
+```
+
 
 
 6. What will your response variable be for answering the research question(s)?
 
 ::: {.answer-box}
-  Answer here
+  I'm planning on doing a multinomial logistic regression model using the treatment response variable, but if time constraints or analytic difficulty become an issue I can fall back on the binary treatment response variable as my outcome.
 :::
 
 7. Provide relevant exploratory plots of your data.
