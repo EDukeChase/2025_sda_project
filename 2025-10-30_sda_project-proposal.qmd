@@ -23,7 +23,7 @@ Provide the the following information for your project.
 1. What research question(s) do you hope to answer?
 
 ::: {.answer-box}
-  Do the relative distributions of tumor, immune, and stromal (structural) cells in a tumor relate to disease outcome after immunotherapy?
+  Are quantitative measures of the distribution of tumor, immune, and stromal (structural) cells in the tumor microenvironment (TME) useful for predictions of a patient's response to immunotherapy?
 :::
 
 
@@ -54,44 +54,39 @@ max_cells <- range(count(cell_df, fov)[2])[2]
 4. Are you merging multiple data sets?
 
 ::: {.answer-box}
-  The information from the two datasets will be merged as part of the analysis, but I won't be combining the two datasets into a single dataset because it would add a lot of extra entries without improving the ability to do my analysis.
+  Yes, I'll be using the dataset with cellular information from biopsy samples of the patients to generate spatial summary statistics that will then be incorporated into the dataset which includes patient clinical data.
 :::
 
 
 5. Provide a table listing each variable you are considering for analysis, briefly describe each variable (e.g., the number of disease cases in each region), and the variable type (e.g., numeric, factor, date, etc.).
 
 ```{r}
-#| label: analysis-vars
+#| label: patient-vars
 
-var_names <- c("Patient ID", "Age Tertile at Diagnosis", "Stage at Diagnosis", "Response", "CR", "PR", "SD", "PD" ,  "Response (binary)", "Cell Type", "Immune", "Stromal", "Tumor", "Centroid Location", "Cell Area", "Tumor-Immune", "Tumor-Stromal", "Immune-Stromal")
-var_desc <- c(
-  "Unique identifier for each patient.",
-  "Which tertile of patient ages the patient falls in.",
-  "Roman numeral cancer stage at diagnosis",
-  "How the patients melanoma responded ot the immunotherapy treatment",
-  "Complete response",
-  "Partial response",
-  "Stable disease",
-  "Progressive disease",
-  "A binary version which indicates whether the disease progressed or not",
-  "Type of cell in the biopsy sample",
-  "Immune cell", 
-  "Stromal cell", 
-  "Tumor cell",
-  "x- and y- locations of each cell in the biopsy sample",
-  "Estimated cell area",
-  "Distribution of immune cells relative to tumor cells",
-  "Distribution of tumor cells amongst stromal cells",
-  "Dispersion of immune cells amongst the stromal cells"
+pt_vars <- tibble(
+  "Variable" = c("id", "age_at_dx_tertile", "gross_dx_stage", "response_multi", "response_multi"),
+  "Description" = c(
+    "Unique identifier for each patient (matches `fov` variable in cell data).",
+    "Which tertile of patient ages the patient falls in.",
+    "Roman numeral cancer stage at diagnosis",
+    "How the patients melanoma responded ot the immunotherapy treatment",
+    "A binary version which only indicates whether the disease progressed or not"
+  ),
+  "Type" = c("Character", "Categorical - Ordinal", "Categorical - Ordinal", "Categorical - Nominal", "Boolean")
 )
-var_type <- c("Character", "Categorical", "Categorical", "Categorical", "", "", "", "", "Boolean", "Categorical", "", "", "", "Spatial", "Numeric", "Numeric", "Numeric", "Numeric")
 
-var_table <- tibble("Variable Name" = var_names, "Description" = var_desc, "Variable Type" = var_type)
+kbl(pt_vars,
+  caption = "Table 1: Patient-level clinical and outcome variables"
+) |> 
+  kable_styling(bootstrap_options = c("striped", "condensed"), full_width = FALSE)
 
-var_table |> 
-  kable("html", booktabs = TRUE) |> 
-  add_indent(positions = c(5:8, 11:13))
+kbl(cell_vars,
+  caption = "Table 2: Cell-level spatial and phenotype variables"
+) |> 
+  kable_styling(bootstrap_options = c("striped", "condensed"), full_width = FALSE)
 ```
+
+
 
 
 
@@ -103,13 +98,16 @@ var_table |>
 
 7. Provide relevant exploratory plots of your data.
 
-::: {.answer-box}
-  Answer here
-:::
+```{r}
+#| label: demo-plots
+
+
+```
+
 
 8. What methods do you plan to use to answer your question of interest?
 
 ::: {.answer-box}
-  Answer here
+I'll use spatial scan statistics to look at first order properties of immune cells and tumor cells to see if relative risk of the most significant clusters for each relate to treatment outcome. I'll also use q-nearest neighbor analysis to look at immune infiltration, which is the degree to which immune cells are distributed in amongst tumor cells.
 :::
 
