@@ -14,27 +14,54 @@ source(here::here("R", "setup.R"))
 data_dir <- here::here("data")
 output_dir <- here::here("output")
 
+# Load data
 pt_df <- read.csv(here("data", "patient_info.csv"))
 cell_df <- read.csv(here("data", "scaled_mibi_data_w_cell_gating.csv"))
+
+# Preprocessing
+pt_df <- pt_df |> 
+  mutate(
+    age_at_dx_tertile = factor(age_at_dx_tertile),
+    dx_stage = factor(dx_stage),
+    gross_dx_stage = factor(gross_dx_stage),
+    response_binary = as.logical(response_binary),
+    response_multi = factor(response_multi, levels = c("CR", "PR", "SD", "PD"))
+  )
+
+cell_df <- cell_df |> 
+  mutate(
+    cell_type = factor(
+      case_when(
+        if_any(c(35:36), ~ as.logical(.)) ~ "Tumor",
+        if_any(c(37:38), ~ as.logical(.)) ~ "Stroma",
+        if_any(c(39:66), ~ as.logical(.)) ~ "Immune",
+        TRUE ~ "Other"
+      ),
+      c("Immune", "Stroma", "Tumor", "Other")
+    )
+  )
+
+cell_df_sm <- cell_df[, c(1:5, 67)]
 ```
+
+
 
 Provide the the following information for your project.
 
-1. What research question(s) do you hope to answer?
+### 1. What research question(s) do you hope to answer?
 
 ::: {.answer-box}
   Are quantitative measures of the distribution of tumor, immune, and stromal (structural) cells in the tumor microenvironment (TME) useful for predictions of a patient's response to immunotherapy?
 :::
 
-
-2. From where did you obtain the data you will use to answer your research question? Please provide a link I can follow, if possible.
+### 2. From where did you obtain the data you will use to answer your research question? Please provide a link I can follow, if possible.
 
 ::: {.answer-box}
   Data were obtained from the article *[Processed Multiplexed Ion Beam Imaging (MIBI) of tumor microenvironments of 54 melanoma samples following immunotherapy](https://data.mendeley.com/datasets/79y7bht7tf/2)* on Mendeley Data
 :::
 
 
-3. How many observations does your data set have?
+### 3. How many observations does your data set have?
 
 ```{r}
 #| label: observations
@@ -51,28 +78,40 @@ max_cells <- range(count(cell_df, fov)[2])[2]
   - The second dataset contains spatial data on cells in a biopsy sampled from each patients melanoma. The number of cells in each sample varies from `r min_cells` to `r max_cells`, for a total of `r nrow(cell_df)` observations.
 :::
 
-4. Are you merging multiple data sets?
+### 4. Are you merging multiple data sets?
 
 ::: {.answer-box}
   Yes, I'll be using the dataset with cellular information from biopsy samples of the patients to generate spatial summary statistics that will then be incorporated into the dataset which includes patient clinical data.
 :::
 
 
-5. Provide a table listing each variable you are considering for analysis, briefly describe each variable (e.g., the number of disease cases in each region), and the variable type (e.g., numeric, factor, date, etc.).
+### 5. Provide a table listing each variable you are considering for analysis, briefly describe each variable (e.g., the number of disease cases in each region), and the variable type (e.g., numeric, factor, date, etc.).
 
 ```{r}
 #| label: patient-vars
 
 pt_vars <- tibble(
-  "Variable" = c("id", "age_at_dx_tertile", "gross_dx_stage", "response_multi", "response_multi"),
+  "Variable" = c("id", "age_at_dx_tertile", "gross_dx_stage", "response_multi", "response_binary"),
   "Description" = c(
-    "Unique identifier for each patient (matches `fov` variable in cell data).",
-    "Which tertile of patient ages the patient falls in.",
+    "Unique identifier for each patient (matches `fov` variable in cell data)",
+    "Which tertile of patient ages the patient falls in",
     "Roman numeral cancer stage at diagnosis",
-    "How the patients melanoma responded ot the immunotherapy treatment",
+    "How the patients melanoma responded to the immunotherapy treatment, ranging from complete response (remission) to progressive disease (worsening)",
     "A binary version which only indicates whether the disease progressed or not"
   ),
   "Type" = c("Character", "Categorical - Ordinal", "Categorical - Ordinal", "Categorical - Nominal", "Boolean")
+)
+
+cell_vars <- tibble(
+  "Variable" = c("fov", "area", "x_centroid", "y_centroid", "cell_type"),
+  "Description" = c(
+    "Field of View (matches up with the `id` variable from patient data",
+    "Estimated area of each cell",
+    "The x-coordinate of the cell centroid",
+    "The y-coordinate of the cell centroid",
+    "A variable I will construct that takes the very detailed cell categorization and generalizes it down to the four categories of immune, stromal (structural), tumor, and other (uncategorized)"
+  ),
+  "Type" = c("Character", "Numeric", "Numeric", "Numeric", "Categorical - Nominal")
 )
 
 kbl(pt_vars,
@@ -90,22 +129,100 @@ kbl(cell_vars,
 
 
 
-6. What will your response variable be for answering the research question(s)?
+### 6. What will your response variable be for answering the research question(s)?
 
 ::: {.answer-box}
   I'm planning on doing a multinomial logistic regression model using the treatment response variable, but if time constraints or analytic difficulty become an issue I can fall back on the binary treatment response variable as my outcome.
 :::
 
-7. Provide relevant exploratory plots of your data.
+### 7. Provide relevant exploratory plots of your data.
 
 ```{r}
-#| label: demo-plots
+#| label: exploratory-plots
+
+# Demographics Plots
+p_age <- ggplot(pt_df, aes(x = age_at_dx_tertile)) + 
+  geom_bar(aes(fill = age_at_dx_tertile)) + 
+  guides(fill = "none") +
+  labs(
+    x = "Age Tertile",
+    y = "Count",
+    title = "Age at Diagnosis"
+    )
+
+p_dx_resp <- ggplot(pt_df, aes(x = gross_dx_stage, fill = response_multi)) + 
+  geom_bar(position = "stack") +
+  scale_fill_discrete(
+    name = "Treatment Repsonse",
+    labels = c("Complete Response", "Partial Response", "Stable Disease", "Progressive Disease")
+  ) + 
+  labs(
+    x = "Cancer Stage",
+    y = "Count",
+    title = "Treatment Response by Cancer Stage"
+  )
+  
+## Match "count" scales
+max_age_count <-  max(table(pt_df$age_at_dx_tertile))
+max_dx_count <- max(table(pt_df$gross_dx_stage))
+global_max_count <- max(max_age_count, max_dx_count)
+combined_plots <- p_age + p_dx_resp + plot_layout(widths = c(0.3, 0.7))
+
+# Cell Count Plots
+cell_counts <- cell_df_sm |> 
+  count(fov, cell_type)
+
+cell_colors <- c(
+  "Immune" = RColorBrewer::brewer.pal(4, "Dark2")[1],
+  "Stroma" = RColorBrewer::brewer.pal(4, "Dark2")[2],
+  "Tumor" = RColorBrewer::brewer.pal(4, "Dark2")[4],
+  "Other" = "gray"
+)
+
+p_counts <- ggplot(cell_counts, aes(x = cell_type, y = n, fill = cell_type)) +
+  geom_boxplot() +
+  scale_y_log10() +
+  scale_fill_manual(values = cell_colors) +
+  labs(
+    title = "Distribution of Cell Counts per Patient Sample",
+    x = "Cell Type",
+    y = "Number of Cells per Sample (Log Scale)"
+  ) +
+  theme(legend.position = "none")
 
 
+
+# Spatial Plots
+
+plot_data <- cell_df_sm |> 
+  filter(fov %in% sample(unique(cell_df_sm$fov), 2))
+
+p_spatial <- ggplot(plot_data, aes(x = x_centroid, y = y_centroid, color = cell_type, size = sqrt(area))) + 
+  geom_point(alpha = 0.7) + 
+  scale_color_manual(values = cell_colors) + 
+  scale_size_continuous(range = c(0.1, 3)) +
+  coord_fixed(ratio = 1) + 
+  theme_void() + 
+  facet_wrap(~ fov) +
+  labs(
+    title = "Spatial Plot of Cell Types for Two Random Patients",
+    x = "X Coordinate",
+    y = "Y Coordinate",
+    color = "Cell Type",
+    size = "Cell Area"
+  ) +
+  theme(legend.position = "right") +
+  guides(color = guide_legend(override.aes = list(size = 5)))
+
+# Print Plots
+
+print(combined_plots & scale_y_continuous(limits = c(0, global_max_count + 2)))
+print(p_counts)
+print(p_spatial)
 ```
 
 
-8. What methods do you plan to use to answer your question of interest?
+### 8. What methods do you plan to use to answer your question of interest?
 
 ::: {.answer-box}
 I'll use spatial scan statistics to look at first order properties of immune cells and tumor cells to see if relative risk of the most significant clusters for each relate to treatment outcome. I'll also use q-nearest neighbor analysis to look at immune infiltration, which is the degree to which immune cells are distributed in amongst tumor cells.

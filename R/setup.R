@@ -8,6 +8,7 @@ library(tidyverse)          # Essential R packages
 
 # --- Additional packages ---
 library(kableExtra)         # Table generation and formatting
+library(patchwork)          # Plot layout
 
 # --- Set seed for reproducibility ---
 set.seed(6384)
@@ -25,8 +26,8 @@ knitr::opts_chunk$set(
 # --- Set plot options ---
 theme_set(theme_minimal(base_size = 12))
 options(
-  ggplot2.discrete.colour = RColorBrewer::brewer.pal(3, "Dark2"),
-  ggplot2.discrete.fill = RColorBrewer::brewer.pal(3, "Dark2"),
+  ggplot2.discrete.colour = RColorBrewer::brewer.pal(5, "Dark2"),
+  ggplot2.discrete.fill = RColorBrewer::brewer.pal(5, "Dark2"),
   ggplot2.continuous.colour = "viridis",
   ggplot2.continuous.fill = "viridis"
 )
